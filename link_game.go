@@ -227,11 +227,16 @@ func (cp *ChessPanel) isLinked0(x1, y1, x2, y2 int) bool {
 
 // 1折连通
 func (cp *ChessPanel) isLinked1(x1, y1, x2, y2 int) bool {
+	// 同一行或同一列不能一折连接
+	if x1 == x2 || y1 == y2 {
+		return false
+	}
+	// 根据起点终点确定两种拐点情况
 	// 判断拐点1(x1,y2)是否0折连通起点终点
 	if cp.IsEmpty(x1, y2) && cp.isLinked0(x1, y2, x1, y1) && cp.isLinked0(x1, y2, x2, y2) {
 		return true
 	}
-	//  判断拐点1(x2,y1)是否0折连通起点终点
+	//  判断拐点2(x2,y1)是否0折连通起点终点
 	if cp.IsEmpty(x2, y1) && cp.isLinked0(x2, y1, x1, y1) && cp.isLinked0(x2, y1, x2, y2) {
 		return true
 	}
@@ -240,51 +245,64 @@ func (cp *ChessPanel) isLinked1(x1, y1, x2, y2 int) bool {
 
 // 2折连通
 func (cp *ChessPanel) isLinked2(x1, y1, x2, y2 int) bool {
-	// 以(x1,1)为起点遍历的上下左右节点 寻找可以一折连通的路径
-	// 向左遍历(x 减少)
-	for x := x1 - 1; x >= 0; x-- {
-		// 遇到障碍放弃这条路
-		if !cp.IsEmpty(x, y1) {
-			break
+	// 以(x1,y1)为起点遍历的上下左右节点 寻找可以一折连通的路径
+
+	// 不是同一行可以左右遍历寻找二折连接
+	if y1 != y2 {
+		// 向左遍历(x 减少)
+		for x := x1 - 1; x >= 0; x-- {
+			// 遇到障碍放弃这条路
+			if !cp.IsEmpty(x, y1) {
+				break
+			}
+			// 若当前位置为第一个拐点(x,y1),则第二个拐点为(x,y2)
+			// 判断能否连通
+			if cp.IsEmpty(x, y2) && cp.isLinked0(x, y2, x, y1) && cp.isLinked0(x, y2, x2, y2) {
+				return true
+			}
 		}
-		// 判断当前节点是否可以一折连通终点
-		if cp.isLinked1(x, y1, x2, y2) {
-			return true
-		}
-	}
-	// 向右遍历(x 增加)
-	for x := x1 + 1; x <= len((*cp)[0])-1; x++ {
-		// 遇到障碍放弃这条路
-		if !cp.IsEmpty(x, y1) {
-			break
-		}
-		// 判断当前节点是否可以一折连通终点
-		if cp.isLinked1(x, y1, x2, y2) {
-			return true
-		}
-	}
-	// 向上遍历(y 减少)
-	for y := y1 - 1; y >= 0; y-- {
-		// 遇到障碍放弃这条路
-		if !cp.IsEmpty(x1, y) {
-			break
-		}
-		// 判断当前节点是否可以一折连通终点
-		if cp.isLinked1(x1, y, x2, y2) {
-			return true
+		// 向右遍历(x 增加)
+		for x := x1 + 1; x <= len((*cp)[0])-1; x++ {
+			// 遇到障碍放弃这条路
+			if !cp.IsEmpty(x, y1) {
+				break
+			}
+			// 若当前位置为第一个拐点(x,y1),则第二个拐点为(x,y2)
+			// 判断能否连通
+			if cp.IsEmpty(x, y2) && cp.isLinked0(x, y2, x, y1) && cp.isLinked0(x, y2, x2, y2) {
+				return true
+			}
 		}
 	}
-	// 向下遍历(y 增加)
-	for y := y1 + 1; y <= len(*cp)-1; y++ {
-		// 遇到障碍放弃这条路
-		if !cp.IsEmpty(x1, y) {
-			break
+
+	// 不是同一列可以上下遍历寻找二折连接
+	if x1 != x2 {
+		// 向上遍历(y 减少)
+		for y := y1 - 1; y >= 0; y-- {
+			// 遇到障碍放弃这条路
+			if !cp.IsEmpty(x1, y) {
+				break
+			}
+			// 若当前位置为第一个拐点(x1,y),则第二个拐点为(x2,y)
+			// 判断能否连通
+			if cp.IsEmpty(x2, y) && cp.isLinked0(x2, y, x1, y) && cp.isLinked0(x2, y, x2, y2) {
+				return true
+			}
 		}
-		// 判断当前节点是否可以一折连通终点
-		if cp.isLinked1(x1, y, x2, y2) {
-			return true
+		// 向下遍历(y 增加)
+		for y := y1 + 1; y <= len(*cp)-1; y++ {
+			// 遇到障碍放弃这条路
+			if !cp.IsEmpty(x1, y) {
+				break
+			}
+			// 若当前位置为第一个拐点(x1,y),则第二个拐点为(x2,y)
+			// 判断能否连通
+			if cp.IsEmpty(x2, y) && cp.isLinked0(x2, y, x1, y) && cp.isLinked0(x2, y, x2, y2) {
+				return true
+			}
 		}
 	}
+
 	return false
 }
 
